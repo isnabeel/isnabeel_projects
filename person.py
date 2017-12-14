@@ -143,6 +143,8 @@ class Person(object):
             child.set_mother(self)
             
     def remove_father(self):
+        '''remove father '''
+        
         if self.father is None:
             raise Exception("father of '{}' is not known.".format(self.name))
         if self not in self.father.children:
@@ -151,7 +153,9 @@ class Person(object):
         self.father = None
         return
     
-    def remove_mother(self):
+    def remove_mother(self):        
+        '''remove mother '''
+        
         if self.mother is None:
             raise Exception("mother of '{}' is not know".format(self.name))
         if self not in self.mother.children:
