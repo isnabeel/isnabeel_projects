@@ -132,6 +132,9 @@ class TestPerson(unittest.TestCase):
         '''Testing get_persons_name '''
         
         self.assertEqual('root_child', self.root_child.get_persons_name(self.root_child))
+        self.assertEqual(Person.get_persons_name(self.child),self.child.name)
+        self.assertEqual(Person.get_persons_name(None), 'NA')
+        self.assertIs(Person.get_persons_name(self.child),self.child.name)
     
     def test_grandparents(self):
         '''Testing grandparents '''
@@ -142,11 +145,17 @@ class TestPerson(unittest.TestCase):
     def test_all_grandparents(self):  
         ''' Testing all_grandparents '''
         
-        self.assertIn(self.root_child.father.father.father, self.root_child.all_grandparents()) 
+        self.assertIn(self.root_child.father.father.father, self.root_child.all_grandparents())
+        self.assertIn(self.root_child.father.father.mother, self.root_child.all_grandparents())
+        
         self.assertIn(self.root_child.father.mother.father, self.root_child.all_grandparents())
         self.assertIn(self.root_child.father.mother.father, self.root_child.all_grandparents())
+        
         self.assertIn(self.root_child.mother.mother.mother, self.root_child.all_grandparents())
+        self.assertIn(self.root_child.mother.mother.father, self.root_child.all_grandparents())
         self.assertIn(self.root_child.mother.father.father, self.root_child.all_grandparents())
+        self.assertIn(self.root_child.mother.father.mother, self.root_child.all_grandparents()) 
+        
         self.assertIn(self.root_child.mother.father.father, self.root_child.all_grandparents())
         self.assertIsNot(self.root_child.mother.father.father,self.root_child.all_grandparents())
         self.assertIsNotNone(self.root_child.mother.father.father,self.root_child.all_grandparents())
@@ -157,6 +166,11 @@ class TestPerson(unittest.TestCase):
         ''' Testing all_ancestors '''
         
         self.assertNotEquals(self.root_child.father,self.root_child.all_ancestors())
+        self.assertIn(self.root_child.father.father.father, self.root_child.all_ancestors())
+        self.assertIn(self.root_child.mother.mother.mother, self.root_child.all_ancestors())
+        self.assertIn(self.root_child.father.mother.mother, self.root_child.all_ancestors())
+        self.assertIn(self.root_child.mother.father.mother, self.root_child.all_ancestors())
+        
         self.assertIn(self.root_child.father, self.root_child.all_ancestors())
         self.assertIn(self.root_child.father.father,self.root_child.all_ancestors())
         self.assertNotIn(self.root_child,self.root_child.all_ancestors())
@@ -169,6 +183,7 @@ class TestPerson(unittest.TestCase):
         self.assertIn(self.root_child.father.father,self.root_child.ancestors(2))
         self.assertIn(self.root_child.father.father.father,self.root_child.ancestors(3))
 
+        self.assertIn(self.root_child.mother.mother.mother,self.root_child.ancestors(3))
         self.assertIn(self.root_child.father.mother,self.root_child.ancestors(2))
         self.assertIn(self.root_child.father.mother.father,self.root_child.ancestors(3))
         
