@@ -28,12 +28,21 @@ class TestGender(unittest.TestCase):
         with self.assertRaises(PersonError) as context:
             Gender().get_gender('---')
         self.assertIn('Illegal gender', str(context.exception))
+        
+    def test_genders_string_mapping(self):
+        '''Testing genders_string_mapping'''
+        rv = 'Legal genders, which are case insensitive, map to gender constants'
+        self.assertIn(rv, Gender().genders_string_mappings())
+        self.assertIn('-> M', Gender().genders_string_mappings())
+        self.assertIn('-> unknown', Gender().genders_string_mappings())
+        self.assertIn('-> F', Gender().genders_string_mappings())
+        self.assertIn('-> F',Gender().genders_string_mappings())
 
 
 class TestPerson(unittest.TestCase):
 
     def setUp(self):
-        # create a few Persons
+        # create a Person
         self.child = Person('kid', 'NA')
         self.mom = Person('mom', 'f')
         self.dad = Person('dad', 'm')
@@ -67,7 +76,7 @@ class TestPerson(unittest.TestCase):
         self.mom.gender = Gender.MALE
         with self.assertRaises(PersonError) as context:
             self.child.set_mother(self.mom)
-        self.assertIn('is not female', str(context.exception))
+        self.assertIn("is not female", str(context.exception))
         
     def test_set_father(self):
         '''Testing set_father'''
@@ -82,7 +91,17 @@ class TestPerson(unittest.TestCase):
         self.assertIn('is not male', str(context.exception))
         
     def test_remove_father(self):
-        '''Testing remove_father'''
+        '''Testing function remove_father'''
+        
+        with self.assertRaises(Exception) as context:
+            self.child.remove_father()
+        self.assertIn('is not known', str(context.exception))
+        
+        self.child.set_father(self.dad)
+        self.dad.children.remove(self.child)
+        with self.assertRaises(Exception) as context:
+            self.child.remove_father()
+        self.assertIn('is not a child of father', str(context.exception))
         
         self.child.set_father(self.dad)
         self.child.remove_father()
@@ -90,12 +109,22 @@ class TestPerson(unittest.TestCase):
         self.assertNotIn(self.child, self.dad.children)
         
     def test_remove_mother(self):
-        '''Testing remove_mother'''
+        '''Testing function remove_mother'''
+        
+        with self.assertRaises(Exception) as context:
+            self.child.remove_mother()
+        self.assertTrue('is not know', str(context.exception))
+        
+        self.child.set_mother(self.mom)
+        self.mom.children.remove(self.child)
+        with self.assertRaises(Exception) as context:
+            self.child.remove_mother()
+        self.assertTrue('is not a child of mother', str(context.exception))
         
         self.child.set_mother(self.mom)
         self.child.remove_mother()
         self.assertNotEqual(self.mom, self.child.mother)
-        self.assertNotIn(self.child, self.mom.children)
+        self.assertNotIn(self.child, self.mom.children) # self.mom noted in setUp
         
 
     
@@ -135,26 +164,29 @@ class TestPerson(unittest.TestCase):
         self.assertEqual(Person.get_persons_name(self.child),self.child.name)
         self.assertEqual(Person.get_persons_name(None), 'NA')
         self.assertIs(Person.get_persons_name(self.child),self.child.name)
+        self.assertTrue(Person.get_persons_name(self.child),self.child.name)
     
     def test_grandparents(self):
         '''Testing grandparents '''
         
         self.assertIn(self.root_child.father.father, self.root_child.grandparents())
+        self.assertIn(self.root_child.father.mother, self.root_child.grandparents())        
+        self.assertIn(self.root_child.mother.father,self.root_child.grandparents())
         self.assertIn(self.root_child.mother.mother,self.root_child.grandparents())
+        
     
     def test_all_grandparents(self):  
         ''' Testing all_grandparents '''
         
         self.assertIn(self.root_child.father.father.father, self.root_child.all_grandparents())
         self.assertIn(self.root_child.father.father.mother, self.root_child.all_grandparents())
-        
         self.assertIn(self.root_child.father.mother.father, self.root_child.all_grandparents())
         self.assertIn(self.root_child.father.mother.father, self.root_child.all_grandparents())
-        
         self.assertIn(self.root_child.mother.mother.mother, self.root_child.all_grandparents())
         self.assertIn(self.root_child.mother.mother.father, self.root_child.all_grandparents())
         self.assertIn(self.root_child.mother.father.father, self.root_child.all_grandparents())
         self.assertIn(self.root_child.mother.father.mother, self.root_child.all_grandparents()) 
+        self.assertIn(self.root_child.mother.mother.father, self.root_child.all_grandparents())
         
         self.assertIn(self.root_child.mother.father.father, self.root_child.all_grandparents())
         self.assertIsNot(self.root_child.mother.father.father,self.root_child.all_grandparents())
@@ -165,11 +197,16 @@ class TestPerson(unittest.TestCase):
     def test_all_ancestors(self):
         ''' Testing all_ancestors '''
         
-        self.assertNotEquals(self.root_child.father,self.root_child.all_ancestors())
+        self.assertNotEqual(self.root_child.father,self.root_child.all_ancestors())
         self.assertIn(self.root_child.father.father.father, self.root_child.all_ancestors())
         self.assertIn(self.root_child.mother.mother.mother, self.root_child.all_ancestors())
         self.assertIn(self.root_child.father.mother.mother, self.root_child.all_ancestors())
         self.assertIn(self.root_child.mother.father.mother, self.root_child.all_ancestors())
+        self.assertIn(self.root_child.mother,self.root_child.all_ancestors())
+        self.assertIn(self.root_child.mother.mother, self.root_child.all_ancestors())
+        self.assertIn(self.root_child.mother.father,self.root_child.all_ancestors())
+        self.assertIsNot(self.root_child.mother.father.father.father,self.root_child.all_ancestors())
+        self.assertIsNot(self.root_child.mother.mother.mother.mother,self.root_child.all_ancestors())
         
         self.assertIn(self.root_child.father, self.root_child.all_ancestors())
         self.assertIn(self.root_child.father.father,self.root_child.all_ancestors())
@@ -181,11 +218,19 @@ class TestPerson(unittest.TestCase):
         
         self.assertIn(self.root_child.father,self.root_child.ancestors(1))
         self.assertIn(self.root_child.father.father,self.root_child.ancestors(2))
-        self.assertIn(self.root_child.father.father.father,self.root_child.ancestors(3))
-
-        self.assertIn(self.root_child.mother.mother.mother,self.root_child.ancestors(3))
         self.assertIn(self.root_child.father.mother,self.root_child.ancestors(2))
+        self.assertIn(self.root_child.mother.father,self.root_child.ancestors(2))
+        self.assertIn(self.root_child.mother.mother,self.root_child.ancestors(2))
+        
+        self.assertIn(self.root_child.father.father.father,self.root_child.ancestors(3))
+        self.assertIn(self.root_child.father.father.mother,self.root_child.ancestors(3))
         self.assertIn(self.root_child.father.mother.father,self.root_child.ancestors(3))
+        self.assertIn(self.root_child.father.mother.mother,self.root_child.ancestors(3))
+        
+        self.assertIn(self.root_child.mother.mother.father,self.root_child.ancestors(3))
+        self.assertIn(self.root_child.mother.mother.mother,self.root_child.ancestors(3))
+        self.assertIn(self.root_child.mother.father.mother,self.root_child.ancestors(3))
+        self.assertIn(self.root_child.mother.father.mother,self.root_child.ancestors(3))
         
         self.assertIn(self.root_child.mother,self.root_child.ancestors(1))
         self.assertIn(self.root_child.mother.mother,self.root_child.ancestors(2))
@@ -196,7 +241,10 @@ class TestPerson(unittest.TestCase):
         with self.assertRaises(PersonError) as context:
             self.root_child.ancestors(min_depth = 2, max_depth = 1)
         self.assertIn('max_depth (1) cannot be less than min_depth (2)', str(context.exception))
-        
+    
+    def test_parent(self):
+        self.assertEqual(self.root_child.father, self.root_child.father)
+        self.assertEqual(self.root_child.mother, self.root_child.mother)
 
 if __name__ == '__main__':
     unittest.main()
